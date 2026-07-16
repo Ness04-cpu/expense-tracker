@@ -11,6 +11,7 @@ Why this project is a good learning piece:
 
 import sqlite3
 from datetime import date
+import CSV
 
 DB_NAME = "expenses.db"
 
@@ -64,6 +65,28 @@ def list_expenses(conn):
         print(f"{row[0]:<4}{row[1]:<12}{row[2]:<15}{row[3]:<20}{row[4]:>10.2f}")
     print()
 
+def export_to_csv(conn):
+    filename = input("Filename to save as (e.g. expenses.csv): ").strip()
+    if not filename:
+        filename = "expenses_export.csv"
+    if not filename.endswith(".csv"):
+        filename += ".csv"
+
+    rows = conn.execute(
+        "SELECT entry_date, category, description, amount FROM expenses ORDER BY entry_date"
+    ).fetchall()
+
+    if not rows:
+        print("No expenses to export.\n")
+        return
+
+    with open(filename, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Date", "Category", "Description", "Amount"])  # header row
+        writer.writerows(rows)
+
+    print(f"Exported {len(rows)} expenses to {filename}\n")
+
 
 def total_by_category(conn):
     rows = conn.execute(
@@ -102,7 +125,8 @@ Personal Expense Tracker
 2. List all expenses
 3. Totals by category
 4. Delete an expense
-5. Quit
+5. Export to CSV
+6. Quit
 """
     while True:
         print(menu)
@@ -117,6 +141,8 @@ Personal Expense Tracker
         elif choice == "4":
             delete_expense(conn)
         elif choice == "5":
+            export_to_csv(conn)
+        elif choice == "6":
             print("Goodbye!")
             break
         else:
